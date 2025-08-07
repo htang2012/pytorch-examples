@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Check for ROCm installation
+if ! command -v rocminfo &> /dev/null; then
+    echo "Warning: ROCm not detected on host system"
+    echo "Make sure ROCm is installed and GPU is available"
+fi
+
+# Build AMD ROCm PyTorch 2.0 container
+echo "Building AMD ROCm PyTorch container..."
+docker build -f Dockerfile.amd -t pytorch2-amd .
+
+# Run container with ROCm support
+echo "Starting AMD ROCm PyTorch 2.0 container..."
+docker run -it --rm \
+    --name pytorch2-amd \
+    --device=/dev/kfd \
+    --device=/dev/dri \
+    --security-opt seccomp=unconfined \
+    --group-add video \
+    --group-add render \
+    -p 8888:8888 \
+    -v $(pwd):/workspace \
+    -e HSA_OVERRIDE_GFX_VERSION=10.3.0 \
+    -e ROCM_PATH=/opt/rocm \
+    -e HIP_VISIBLE_DEVICES=0 \
+    pytorch2-amd
+
+echo "Container started. Access Jupyter Lab at http://localhost:8888"
+echo "AMD ROCm support enabled"

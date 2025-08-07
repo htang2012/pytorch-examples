@@ -1,0 +1,53 @@
+# AMD ROCm PyTorch environment for torch.compile
+FROM rocm/pytorch:rocm5.7_ubuntu20.04_py3.8_pytorch_2.0.1
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV HSA_OVERRIDE_GFX_VERSION=10.3.0
+ENV ROCM_PATH=/opt/rocm
+
+# Update package lists
+RUN apt-get update && apt-get install -y \
+    wget \
+    curl \
+    git \
+    vim \
+    htop \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+RUN pip install --no-cache-dir \
+    jupyter \
+    jupyterlab \
+    matplotlib \
+    seaborn \
+    pandas \
+    numpy \
+    scikit-learn \
+    tensorboard \
+    torchvision \
+    torchaudio \
+    transformers \
+    datasets \
+    accelerate
+
+# Install ROCm-specific tools
+RUN pip install --no-cache-dir \
+    torch-audio-rocm \
+    torch-vision-rocm
+
+# Set ROCm environment
+ENV PYTORCH_ROCM_ARCH=gfx1030
+ENV HIP_VISIBLE_DEVICES=0
+
+# Create working directory
+WORKDIR /workspace
+
+# Copy examples
+COPY . /workspace/
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Default command
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]

@@ -1,0 +1,45 @@
+# Intel Extension for PyTorch optimization environment
+FROM intel/intel-extension-for-pytorch:2.1.0-pip-base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV INTEL_EXTENSION_FOR_PYTORCH_ENABLED=1
+
+# Install additional dependencies
+RUN pip install --no-cache-dir \
+    jupyter \
+    jupyterlab \
+    matplotlib \
+    seaborn \
+    pandas \
+    numpy \
+    scikit-learn \
+    triton \
+    tensorboard \
+    torchvision \
+    transformers \
+    datasets
+
+# Install Intel-specific optimization tools
+RUN pip install --no-cache-dir \
+    intel-extension-for-pytorch \
+    mkl \
+    intel-openmp
+
+# Set Intel optimizations
+ENV KMP_BLOCKTIME=1
+ENV KMP_SETTINGS=1
+ENV KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+ENV OMP_NUM_THREADS=auto
+
+# Create working directory
+WORKDIR /workspace
+
+# Copy examples
+COPY . /workspace/
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Default command
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Build Intel PyTorch 2.0 container
+echo "Building Intel Extension for PyTorch container..."
+docker build -f Dockerfile.intel -t pytorch2-intel .
+
+# Run container with Intel optimizations
+echo "Starting Intel PyTorch 2.0 container..."
+docker run -it --rm \
+    --name pytorch2-intel \
+    --cpuset-cpus="0-$(nproc)" \
+    --memory="$(free -m | awk 'NR==2{printf "%.0fG", $2/1024}')" \
+    -p 8888:8888 \
+    -v $(pwd):/workspace \
+    -e KMP_BLOCKTIME=1 \
+    -e KMP_SETTINGS=1 \
+    -e KMP_AFFINITY="granularity=fine,verbose,compact,1,0" \
+    -e OMP_NUM_THREADS=$(nproc) \
+    pytorch2-intel
+
+echo "Container started. Access Jupyter Lab at http://localhost:8888"
+echo "Intel optimizations enabled with $(nproc) threads"
